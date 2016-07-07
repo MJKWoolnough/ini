@@ -56,6 +56,7 @@ func DecoderBytes(b []byte, v interface{}, options ...Option) error {
 }
 
 func (d *decoder) decode(v interface{}) error {
+	d.TokeniserState(d.name)
 	rv := reflect.ValueOf(v)
 
 	if k := rv.Kind(); k != reflect.Map {
