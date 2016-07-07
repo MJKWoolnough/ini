@@ -9,7 +9,7 @@ import (
 )
 
 type decoder struct {
-	parser.Tokeniser
+	parser.Parser
 
 	NameValueDelim                                                  rune
 	SubSections                                                     bool
@@ -33,7 +33,7 @@ func DecoderBytes(b []byte, v interface{}, options ...Option) error {
 
 func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 	d := decoder{
-		Tokeniser:       t,
+		Parser:          parser.New(t),
 		NameValueDelim:  '=',
 		SubSectionDelim: '/',
 	}
@@ -41,6 +41,7 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		o(&d)
 	}
 	d.TokeniserState(d.name)
+	d.PhraserState(d.nameValue)
 	rv := reflect.ValueOf(v)
 
 	switch rv.Kind() {
