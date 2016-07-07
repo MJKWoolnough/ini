@@ -1,6 +1,10 @@
 package ini
 
-import "github.com/MJKWoolnough/parser"
+import (
+	"errors"
+
+	"github.com/MJKWoolnough/parser"
+)
 
 const (
 	sectionOpen  = '['
@@ -11,6 +15,11 @@ const (
 	tokenSection parser.TokenType = iota
 	tokenName
 	tokenValue
+)
+
+const (
+	phraseSection parser.PhraseType = iota
+	phraseNameValue
 )
 
 func (d *decoder) sectionName(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
@@ -62,3 +71,38 @@ func (d *decoder) value(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 		Data: data,
 	}, d.name
 }
+
+func (d *decoder) section(p *parser.Parser) (parser.Phrase, parser.PhraseFunc) {
+	if !p.Accept(tokenSection) {
+		if p.Err != nil {
+			p.Err = ErrUnexpectedError
+		}
+		return p.Error()
+	}
+	return parser.Phrase{
+		Type: phraseSection,
+		Data: p.Get(),
+	}, d.nameValue
+}
+
+func (d *decoder) nameValue(p *parser.Parser) (parser.Phrase, parser.PhraseFunc) {
+	if !p.Accept(tokenName) {
+		return d.section(p)
+	}
+	if !p.Accept(tokenValue) {
+		if p.Err != nil {
+			p.Err = ErrUnexpectedError
+		}
+		return p.Error()
+	}
+
+	return parser.Phrase{
+		Type: phraseNameValue,
+		Data: p.Get(),
+	}, d.nameValue
+}
+
+//Errors
+var (
+	ErrUnexpectedError = errors.New("unexpected error parsing INI file")
+)
