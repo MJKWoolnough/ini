@@ -43,43 +43,41 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 	d.TokeniserState(d.name)
 	rv := reflect.ValueOf(v)
 
-	if k := rv.Kind(); k != reflect.Map {
+	switch rv.Kind() {
+	case reflect.Map:
 		if rv.Type().Key().Kind() != reflect.String {
 			return ErrInvalidKey
 		}
 		switch rv.Type().Elem().Kind() {
-		case reflect.Map:
-		case reflect.String:
-		case reflect.Struct:
+		case reflect.Map: // map[string]map[string]???
+			switch rv.Type().Elem().Elem().Kind() {
+			case reflect.String: //map[string]map[string]string
+			default:
+				return ErrInvalidMapType
+			}
+		case reflect.String: //map[string]string
+		case reflect.Struct: //map[string]struct
+		default:
+			return ErrInvalidMapType
 		}
-	} else if k != reflect.Ptr {
-		return ErrNotPointer
-	}
+	case reflect.Ptr:
+		rv = rv.Elem()
 
-	rv = rv.Elem()
-
-	switch rv.Kind() {
-	case reflect.Slice:
-		if rv.Type().Elem().Kind() != reflect.Struct {
-			return ErrInvalidSliceType
+		if rv.Kind() != reflect.Struct {
+			return ErrInvalidType
 		}
-	case reflect.Struct:
+
 	default:
 		return ErrInvalidType
 	}
 
 	return nil
-
-	// if slice of struct type, read until a section and for each add to the slice
-
-	// if struct type, read global section into struct
-	// read sections into relevant structs
 }
 
 // Errors
 var (
-	ErrNotPointer       = errors.New("need pointer to type")
-	ErrInvalidType      = errors.New("needs map, slice or struct type")
+	ErrInvalidType      = errors.New("needs map or pointer to struct type")
 	ErrInvalidSliceType = errors.New("need slice of structs")
 	ErrInvalidKey       = errors.New("maps require string keys")
+	ErrInvalidMapType   = errors.New("invalid map type")
 )
