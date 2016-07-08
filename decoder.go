@@ -54,8 +54,9 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 			switch rv.Type().Elem().Elem().Kind() {
 			case reflect.String: //map[string]map[string]string
 				var section string
+				s := reflect.New(rv.Type().Key()).Elem()
 				for {
-					s := reflect.ValueOf(section)
+					s.SetString(section)
 					m := rv.MapIndex(s)
 					if !m.IsValid() {
 						m = reflect.MakeMap(rv.Type().Elem())
@@ -108,12 +109,16 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 }
 
 func (d *decoder) readMap(m reflect.Value, prefix string) {
+	k := reflect.New(m.Type().Key()).Elem()
+	v := reflect.New(m.Type().Elem()).Elem()
 	for d.Peek().Type == tokenName {
 		p, _ := d.GetPhrase()
 		if p.Type != phraseNameValue {
 			break
 		}
-		m.SetMapIndex(reflect.ValueOf(prefix+p.Data[0].Data), reflect.ValueOf(p.Data[1].Data))
+		k.SetString(prefix + p.Data[0].Data)
+		v.SetString(p.Data[1].Data)
+		m.SetMapIndex(k, v)
 	}
 }
 
