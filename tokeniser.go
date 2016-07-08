@@ -2,6 +2,7 @@ package ini
 
 import (
 	"errors"
+	"io"
 
 	"github.com/MJKWoolnough/parser"
 )
@@ -9,6 +10,8 @@ import (
 const (
 	sectionOpen  = '['
 	sectionClose = ']'
+	commentA     = '#'
+	commentB     = ';'
 )
 
 const (
@@ -25,7 +28,15 @@ const (
 func (d *decoder) sectionName(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	t.Accept(string(sectionOpen))
 	t.Get()
-	t.ExceptRun(string(sectionClose))
+	switch t.ExceptRun(string(sectionClose) + "\n") {
+	case sectionClose:
+	case -1:
+		d.Err = io.ErrUnexpectedEOF
+		return t.Error()
+	default:
+		d.Err = ErrInvalidName
+		return t.Error()
+	}
 	data := t.Get()
 	t.Accept(string(sectionClose))
 	t.Get()
@@ -36,25 +47,46 @@ func (d *decoder) sectionName(t *parser.Tokeniser) (parser.Token, parser.TokenFu
 }
 
 func (d *decoder) name(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
-	if t.Peek() == sectionOpen {
-		return d.sectionName(t)
-	}
-	t.ExceptRun(string(d.NameValueDelim))
-	data := t.Get()
-	t.Accept(string(d.NameValueDelim))
+	t.AcceptRun("\n")
 	t.Get()
-	return parser.Token{
-		Type: tokenName,
-		Data: data,
-	}, d.value
+	switch t.Peek() {
+	case -1:
+		return t.Done()
+	case sectionOpen:
+		return d.sectionName(t)
+	case commentA, commentB:
+		return d.comment(t)
+	}
+	c := t.ExceptRun(string(d.NameValueDelim) + "\n")
+	data := t.Get()
+	switch c {
+	case d.NameValueDelim:
+		t.Accept(string(d.NameValueDelim))
+		t.Get()
+		return parser.Token{
+			Type: tokenName,
+			Data: data,
+		}, d.value
+	case -1:
+		t.Err = io.ErrUnexpectedEOF
+	default:
+		t.Err = ErrInvalidName
+	}
+	return t.Error()
 }
 
 func (d *decoder) value(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
-	var data string
+	data := ""
+	next := d.name
+Loop:
 	for {
-		switch t.ExceptRun("\n\\") {
+		c := t.ExceptRun("\n\\")
+		switch c {
+		case -1:
+			next = (*parser.Tokeniser).Done
+			break Loop
 		case '\n':
-			break
+			break Loop
 		case '\\':
 			data += t.Get()
 			t.Accept("\\")
@@ -69,12 +101,18 @@ func (d *decoder) value(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
 	return parser.Token{
 		Type: tokenValue,
 		Data: data,
-	}, d.name
+	}, next
+}
+
+func (d *decoder) comment(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) {
+	t.ExceptRun("\n")
+	t.Get()
+	return d.name(t)
 }
 
 func (d *decoder) section(p *parser.Parser) (parser.Phrase, parser.PhraseFunc) {
 	if !p.Accept(tokenSection) {
-		if p.Err != nil {
+		if p.Err == nil {
 			p.Err = ErrUnexpectedError
 		}
 		return p.Error()
@@ -90,7 +128,7 @@ func (d *decoder) nameValue(p *parser.Parser) (parser.Phrase, parser.PhraseFunc)
 		return d.section(p)
 	}
 	if !p.Accept(tokenValue) {
-		if p.Err != nil {
+		if p.Err == nil {
 			p.Err = ErrUnexpectedError
 		}
 		return p.Error()
@@ -105,4 +143,5 @@ func (d *decoder) nameValue(p *parser.Parser) (parser.Phrase, parser.PhraseFunc)
 //Errors
 var (
 	ErrUnexpectedError = errors.New("unexpected error parsing INI file")
+	ErrInvalidName     = errors.New("invalid name")
 )
