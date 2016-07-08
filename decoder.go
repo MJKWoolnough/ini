@@ -53,10 +53,42 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		case reflect.Map: // map[string]map[string]???
 			switch rv.Type().Elem().Elem().Kind() {
 			case reflect.String: //map[string]map[string]string
+				var section string
+				for {
+					s := reflect.ValueOf(section)
+					m := rv.MapIndex(s)
+					if !m.IsValid() {
+						m = reflect.MakeMap(rv.Type().Elem())
+					}
+					d.readMap(m, "")
+					if m.Len() != 0 {
+						rv.SetMapIndex(s, m)
+					}
+					p, _ := d.GetPhrase()
+					if p.Type != phraseSection {
+						if d.Err == io.EOF {
+							return nil
+						}
+						return d.Err
+					}
+					section = p.Data[0].Data
+				}
 			default:
 				return ErrInvalidMapType
 			}
 		case reflect.String: //map[string]string
+			var prefix string
+			for {
+				d.readMap(rv, prefix)
+				p, _ := d.GetPhrase()
+				if p.Type != phraseSection {
+					if d.Err == io.EOF {
+						return nil
+					}
+					return d.Err
+				}
+				prefix = p.Data[0].Data + string(d.SubSectionDelim)
+			}
 		case reflect.Struct: //map[string]struct
 		default:
 			return ErrInvalidMapType
@@ -73,6 +105,16 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 	}
 
 	return nil
+}
+
+func (d *decoder) readMap(m reflect.Value, prefix string) {
+	for d.Peek().Type == tokenName {
+		p, _ := d.GetPhrase()
+		if p.Type != phraseNameValue {
+			break
+		}
+		m.SetMapIndex(reflect.ValueOf(prefix+p.Data[0].Data), reflect.ValueOf(p.Data[1].Data))
+	}
 }
 
 // Errors
