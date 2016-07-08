@@ -93,6 +93,22 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 				prefix = p.Data[0].Data + string(d.SubSectionDelim)
 			}
 		case reflect.Struct: //map[string]struct
+			var section string
+			s := reflect.New(rv.Type().Key()).Elem()
+			for {
+				s.SetString(section)
+				v := reflect.New(rv.Type().Elem()).Elem()
+				d.readStruct(v)
+				rv.SetMapIndex(s, v)
+				p, _ := d.GetPhrase()
+				if p.Type != phraseSection {
+					if d.Err == io.EOF {
+						return nil
+					}
+					return d.Err
+				}
+				section = p.Data[0].Data
+			}
 		default:
 			return ErrInvalidMapType
 		}
