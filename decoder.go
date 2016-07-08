@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"reflect"
+	"strings"
 
 	"github.com/MJKWoolnough/parser"
 )
@@ -120,6 +121,96 @@ func (d *decoder) readMap(m reflect.Value, prefix string) {
 		v.SetString(p.Data[1].Data)
 		m.SetMapIndex(k, v)
 	}
+}
+
+func (d *decoder) readStruct(s reflect.Value) {
+	t := s.Type()
+	nf := t.NumField()
+	for d.Peek().Type == tokenName {
+		p, _ := d.GetPhrase()
+		pn := p.Data[0].Data
+		pv := p.Data[1].Data
+		if p.Type != phraseNameValue {
+			break
+		}
+		match := -1
+		score := -1
+		for i := 0; i < nf; i++ {
+			f := t.Field(i)
+			if f.PkgPath != "" {
+				continue
+			}
+			tag := f.Tag.Get("ini")
+			if tag == "" {
+				tag = f.Name
+			} else if tag[0] == ',' {
+				tag = f.Name + tag
+			}
+			n, o := parseTag(tag)
+			if n == pn {
+				match = i
+				break
+			}
+			if l := len(n); l > score && l >= len(pn) && o.Contains("prefix") && pn[:l] == n {
+				score = l
+				match = i
+			}
+		}
+		if match < 0 {
+			continue
+		}
+		f := s.Field(match)
+		switch f.Kind() {
+		case reflect.Slice:
+			v := reflect.New(f.Type().Elem()).Elem()
+			setValue(v, pv)
+			reflect.Append(f, v)
+		case reflect.Map:
+			k := reflect.New(f.Type().Key()).Elem()
+			if k.Kind() == reflect.String {
+				v := reflect.New(f.Type().Elem()).Elem()
+				setValue(v, pv)
+				f.SetMapIndex(k, v)
+			}
+		default:
+			v := reflect.New(f.Type()).Elem()
+			err := setValue(v, pv)
+			if err != nil && !d.IgnoreTypeErrors {
+				d.Err = err
+				return
+			}
+			f.Set(v)
+		}
+	}
+}
+
+func setValue(v reflect.Value, pv string) (err error) {
+	switch v.Kind() {
+	case reflect.String:
+		v.SetString(pv)
+	case reflect.Bool:
+		switch strings.ToUpper(pv) {
+		case "TRUE", "T", "ON", "1":
+			v.SetBool(true)
+		default:
+			v.SetBool(false)
+		}
+	case reflect.Uint:
+	case reflect.Uint8:
+	case reflect.Uint16:
+	case reflect.Uint32:
+	case reflect.Uint64:
+	case reflect.Int:
+	case reflect.Int8:
+	case reflect.Int16:
+	case reflect.Int32:
+	case reflect.Int64:
+	case reflect.Float32:
+	case reflect.Float64:
+	case reflect.Complex64:
+	case reflect.Complex128:
+	}
+	return err
 }
 
 // Errors
