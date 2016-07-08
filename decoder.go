@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/MJKWoolnough/parser"
@@ -126,6 +127,7 @@ func (d *decoder) readMap(m reflect.Value, prefix string) {
 func (d *decoder) readStruct(s reflect.Value) {
 	t := s.Type()
 	nf := t.NumField()
+Loop:
 	for d.Peek().Type == tokenName {
 		p, _ := d.GetPhrase()
 		pn := p.Data[0].Data
@@ -163,19 +165,33 @@ func (d *decoder) readStruct(s reflect.Value) {
 		switch f.Kind() {
 		case reflect.Slice:
 			v := reflect.New(f.Type().Elem()).Elem()
-			setValue(v, pv)
+			err := setValue(v, pv)
+			if err == errUnknownType {
+				continue Loop
+			} else if err != nil && !d.IgnoreTypeErrors {
+				d.Err = err
+				return
+			}
 			reflect.Append(f, v)
 		case reflect.Map:
 			k := reflect.New(f.Type().Key()).Elem()
 			if k.Kind() == reflect.String {
 				v := reflect.New(f.Type().Elem()).Elem()
-				setValue(v, pv)
+				err := setValue(v, pv)
+				if err == errUnknownType {
+					continue Loop
+				} else if err != nil && !d.IgnoreTypeErrors {
+					d.Err = err
+					return
+				}
 				f.SetMapIndex(k, v)
 			}
 		default:
 			v := reflect.New(f.Type()).Elem()
 			err := setValue(v, pv)
-			if err != nil && !d.IgnoreTypeErrors {
+			if err == errUnknownType {
+				continue Loop
+			} else if err != nil && !d.IgnoreTypeErrors {
 				d.Err = err
 				return
 			}
@@ -190,25 +206,87 @@ func setValue(v reflect.Value, pv string) (err error) {
 		v.SetString(pv)
 	case reflect.Bool:
 		switch strings.ToUpper(pv) {
-		case "TRUE", "T", "ON", "1":
+		case "TRUE", "T", "ON", "1", "YES", "Y":
 			v.SetBool(true)
-		default:
+		case "FALSE", "F", "OFF", "0", "NO", "N":
 			v.SetBool(false)
+		default:
+			return ErrInvalidBool
 		}
 	case reflect.Uint:
+		n, err := strconv.ParseUint(pv, 0, 0)
+		if err != nil {
+			return err
+		}
+		v.SetUint(n)
 	case reflect.Uint8:
+		n, err := strconv.ParseUint(pv, 0, 8)
+		if err != nil {
+			return err
+		}
+		v.SetUint(n)
 	case reflect.Uint16:
+		n, err := strconv.ParseUint(pv, 0, 16)
+		if err != nil {
+			return err
+		}
+		v.SetUint(n)
 	case reflect.Uint32:
+		n, err := strconv.ParseUint(pv, 0, 32)
+		if err != nil {
+			return err
+		}
+		v.SetUint(n)
 	case reflect.Uint64:
+		n, err := strconv.ParseUint(pv, 0, 64)
+		if err != nil {
+			return err
+		}
+		v.SetUint(n)
 	case reflect.Int:
+		n, err := strconv.ParseInt(pv, 0, 0)
+		if err != nil {
+			return err
+		}
+		v.SetInt(n)
 	case reflect.Int8:
+		n, err := strconv.ParseInt(pv, 0, 8)
+		if err != nil {
+			return err
+		}
+		v.SetInt(n)
 	case reflect.Int16:
+		n, err := strconv.ParseInt(pv, 0, 16)
+		if err != nil {
+			return err
+		}
+		v.SetInt(n)
 	case reflect.Int32:
+		n, err := strconv.ParseInt(pv, 0, 32)
+		if err != nil {
+			return err
+		}
+		v.SetInt(n)
 	case reflect.Int64:
+		n, err := strconv.ParseInt(pv, 0, 64)
+		if err != nil {
+			return err
+		}
+		v.SetInt(n)
 	case reflect.Float32:
+		n, err := strconv.ParseFloat(pv, 32)
+		if err != nil {
+			return err
+		}
+		v.SetFloat(n)
 	case reflect.Float64:
-	case reflect.Complex64:
-	case reflect.Complex128:
+		n, err := strconv.ParseFloat(pv, 64)
+		if err != nil {
+			return err
+		}
+		v.SetFloat(n)
+	default:
+		err = errUnknownType
 	}
 	return err
 }
@@ -219,4 +297,6 @@ var (
 	ErrInvalidSliceType = errors.New("need slice of structs")
 	ErrInvalidKey       = errors.New("maps require string keys")
 	ErrInvalidMapType   = errors.New("invalid map type")
+	ErrInvalidBool      = errors.New("invalid boolean value")
+	errUnknownType      = errors.New("unknown type")
 )
