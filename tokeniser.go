@@ -111,7 +111,9 @@ func (d *decoder) comment(t *parser.Tokeniser) (parser.Token, parser.TokenFunc) 
 }
 
 func (d *decoder) section(p *parser.Parser) (parser.Phrase, parser.PhraseFunc) {
-	if !p.Accept(tokenSection) {
+	if p.Accept(parser.TokenDone) {
+		return p.Done()
+	} else if !p.Accept(tokenSection) {
 		if p.Err == nil {
 			p.Err = ErrUnexpectedError
 		}
