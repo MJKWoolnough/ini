@@ -16,14 +16,14 @@ func (d *decoder) NewMapMapString(m reflect.Value) *mapMapString {
 		Map:    m,
 		MapMap: mm,
 		KeyA:   ka,
-		KeyB:   kv,
+		KeyB:   kb,
 		Value:  v,
 	}
 }
 
 func (m *mapMapString) Section(s string) {
 	m.Map.SetMapIndex(m.KeyA, m.MapMap)
-	m.MapMap = reflect.MakeMap(m.Type().Elem())
+	m.MapMap = reflect.MakeMap(m.Map.Type().Elem())
 	m.KeyA.SetString(s)
 }
 

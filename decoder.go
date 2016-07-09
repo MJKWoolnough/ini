@@ -60,15 +60,16 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		}
 		switch rv.Type().Elem().Kind() {
 		case reflect.String:
-			i = d.NewMapString(v)
+			i = d.NewMapString(rv)
 		case reflect.Struct:
 		case reflect.Map:
-			if rv.Type().Elem().Key().Kind != reflect.String {
+			if rv.Type().Elem().Key().Kind() != reflect.String {
 				return ErrInvalidKey
 			}
-			if rv.Type().Elem().Elem().Kind != reflect.String {
+			if rv.Type().Elem().Elem().Kind() != reflect.String {
 				return ErrInvalidMapType
 			}
+			i = d.NewMapMapString(rv)
 		}
 	case reflect.Ptr:
 	default:
@@ -79,7 +80,7 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		p, _ := d.GetPhrase()
 		switch p.Type {
 		case phraseSection:
-			reader.Section(p.Data[0].Data)
+			i.Section(p.Data[0].Data)
 		case phraseNameValue:
 			if err := i.Set(p.Data[0].Data, p.Data[1].Data); err != nil {
 				if !d.IgnoreTypeErrors {

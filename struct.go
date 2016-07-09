@@ -12,7 +12,7 @@ func matchField(v reflect.Value, name string) int {
 	score := -1
 	nf := v.NumField()
 	for i := 0; i < nf; i++ {
-		f := v.Field(i)
+		f := v.Type().Field(i)
 		if f.PkgPath != "" {
 			continue
 		}
