@@ -1,6 +1,7 @@
 package ini_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -18,8 +19,9 @@ func TestMapStruct(t *testing.T) {
 		Result interface{}
 	}{
 		{"A=B\nC=4", map[string]Test1{"": {"B", 4}}, map[string]Test1{}},
-		{"[Section1]\nA=FG\nC=123", map[string]Test1{"": {"", 0}, "Section1": {"FG", 123}}, map[string]Test1{}},
+		{"[Section1]\nA=FG\nC=123", map[string]Test1{"Section1": {"FG", 123}}, map[string]Test1{}},
 		{"A=B\nC=4\n[Section1]\nA=FG\nC=123", map[string]Test1{"": {"B", 4}, "Section1": {"FG", 123}}, map[string]Test1{}},
+		{"D=B\nE=4", map[string]Test1{}, map[string]Test1{}},
 	}
 
 	for n, test := range tests {
@@ -29,6 +31,7 @@ func TestMapStruct(t *testing.T) {
 			continue
 		}
 		if !reflect.DeepEqual(test.Result, test.Output) {
+			fmt.Println(test.Result)
 			t.Errorf("Test %d: result does not match expected", n+1)
 		}
 	}

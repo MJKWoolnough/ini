@@ -11,6 +11,7 @@ type mapStruct struct {
 	Map              reflect.Value
 	Key              reflect.Value
 	Value            reflect.Value
+	Changes          bool
 	IgnoreTypeErrors bool
 }
 
@@ -24,7 +25,7 @@ func (d *decoder) NewMapStruct(m reflect.Value) *mapStruct {
 }
 
 func (m *mapStruct) Section(s string) {
-	m.Map.SetMapIndex(m.Key, m.Value)
+	m.Close()
 	m.Key.SetString(s)
 	m.Value = reflect.New(m.Map.Type().Elem()).Elem()
 }
@@ -67,12 +68,16 @@ func (m *mapStruct) Set(k, v string) error {
 		}
 		f.Set(sv)
 	}
+	m.Changes = true
 
 	return nil
 }
 
 func (m *mapStruct) Close() {
-	m.Map.SetMapIndex(m.Key, m.Value)
+	if m.Changes {
+		m.Map.SetMapIndex(m.Key, m.Value)
+		m.Changes = false
+	}
 }
 
 func matchField(v reflect.Value, name string) int {
