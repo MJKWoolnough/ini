@@ -22,7 +22,7 @@ func (d *decoder) NewMapMapString(m reflect.Value) *mapMapString {
 }
 
 func (m *mapMapString) Section(s string) {
-	m.Map.SetMapIndex(m.KeyA, m.MapMap)
+	m.Close()
 	m.MapMap = reflect.MakeMap(m.Map.Type().Elem())
 	m.KeyA.SetString(s)
 }
@@ -35,5 +35,7 @@ func (m *mapMapString) Set(k, v string) error {
 }
 
 func (m *mapMapString) Close() {
-	m.Map.SetMapIndex(m.KeyA, m.MapMap)
+	if m.MapMap.Len() > 0 {
+		m.Map.SetMapIndex(m.KeyA, m.MapMap)
+	}
 }
