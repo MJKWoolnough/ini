@@ -3,10 +3,11 @@ package ini
 import "reflect"
 
 type mapString struct {
-	Map   reflect.Value
-	Key   reflect.Value
-	Value reflect.Value
-	Delim rune
+	Map     reflect.Value
+	Key     reflect.Value
+	Value   reflect.Value
+	Delim   rune
+	section string
 }
 
 func (d *decoder) NewMapString(m reflect.Value) *mapString {
@@ -19,10 +20,11 @@ func (d *decoder) NewMapString(m reflect.Value) *mapString {
 }
 
 func (m *mapString) Section(s string) {
-	m.Key.SetString(s + string(m.Delim))
+	m.section = s + string(m.Delim)
 }
 
 func (m *mapString) Set(k, v string) error {
+	m.Key.SetString(m.section + k)
 	m.Value.SetString(v)
 	m.Map.SetMapIndex(m.Key, m.Value)
 	return nil
