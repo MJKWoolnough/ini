@@ -73,6 +73,13 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 			i = d.NewMapMapString(rv)
 		}
 	case reflect.Ptr:
+		if rv.Elem().Kind() != reflect.Struct {
+			return ErrInvalidType
+		}
+		if rv.IsNil() {
+			return ErrNilPointer
+		}
+		i = d.NewStruct(rv.Elem())
 	default:
 		return ErrInvalidType
 	}
@@ -103,4 +110,5 @@ var (
 	ErrInvalidSliceType = errors.New("need slice of structs")
 	ErrInvalidKey       = errors.New("maps require string keys")
 	ErrInvalidMapType   = errors.New("invalid map type")
+	ErrNilPointer       = errors.New("nil pointer to struct")
 )
