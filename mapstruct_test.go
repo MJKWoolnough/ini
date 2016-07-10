@@ -22,6 +22,7 @@ func TestMapStruct(t *testing.T) {
 		{"[Section1]\nA=FG\nC=123", map[string]Test1{"Section1": {"FG", 123}}, map[string]Test1{}},
 		{"A=B\nC=4\n[Section1]\nA=FG\nC=123", map[string]Test1{"": {"B", 4}, "Section1": {"FG", 123}}, map[string]Test1{}},
 		{"D=B\nE=4", map[string]Test1{}, map[string]Test1{}},
+		{"A=B\nC=4\nUnknown=456\n;Comment1\n#Comment2\n[Section1]\n#Comment3\nA=FG\n;comment4\nC=123\nD=56", map[string]Test1{"": {"B", 4}, "Section1": {"FG", 123}}, map[string]Test1{}},
 	}
 
 	for n, test := range tests {
