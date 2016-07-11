@@ -45,11 +45,7 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 	d.TokeniserState(d.name)
 	d.PhraserState(d.nameValue)
 
-	var i interface {
-		Section(string)
-		Set(string, string) error
-		Close()
-	}
+	var h handler
 
 	rv := reflect.ValueOf(v)
 
@@ -60,9 +56,9 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		}
 		switch rv.Type().Elem().Kind() {
 		case reflect.String:
-			i = d.NewMapString(rv)
+			h = d.NewMapString(rv)
 		case reflect.Struct:
-			i = d.NewMapStruct(rv)
+			h = d.NewMapStruct(rv)
 		case reflect.Map:
 			if rv.Type().Elem().Key().Kind() != reflect.String {
 				return ErrInvalidKey
@@ -70,7 +66,7 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 			if rv.Type().Elem().Elem().Kind() != reflect.String {
 				return ErrInvalidMapType
 			}
-			i = d.NewMapMapString(rv)
+			h = d.NewMapMapString(rv)
 		}
 	case reflect.Ptr:
 		if rv.Elem().Kind() != reflect.Struct {
@@ -79,7 +75,7 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		if rv.IsNil() {
 			return ErrNilPointer
 		}
-		i = d.NewStruct(rv.Elem())
+		h = d.NewStruct(rv.Elem())
 	default:
 		return ErrInvalidType
 	}
@@ -88,15 +84,15 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		p, _ := d.GetPhrase()
 		switch p.Type {
 		case phraseSection:
-			i.Section(p.Data[0].Data)
+			h.Section(p.Data[0].Data)
 		case phraseNameValue:
-			if err := i.Set(p.Data[0].Data, p.Data[1].Data); err != nil {
+			if err := h.Set(p.Data[0].Data, p.Data[1].Data); err != nil {
 				if !d.IgnoreTypeErrors {
 					return err
 				}
 			}
 		case parser.PhraseDone:
-			i.Close()
+			h.Close()
 			return nil
 		default:
 			return d.Err

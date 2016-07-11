@@ -5,40 +5,31 @@ import (
 	"strings"
 )
 
+type handler interface {
+	Section(string)
+	Set(string, string) error
+	Close()
+}
+
 type vStruct struct {
 	Struct reflect.Value
-	Value  interface {
-		Section(string)
-		Set(string, string) error
-		Close()
-	}
-	IgnoreTypeErrors bool
-	Delim            string
+	handler
+	Delim string
 }
 
 func (d *decoder) NewStruct(s reflect.Value) *vStruct {
 	return &vStruct{
-		Struct:           s,
-		Value:            null{},
-		IgnoreTypeErrors: d.IgnoreTypeErrors,
-		Delim:            string(d.SubSectionDelim),
+		Struct:  s,
+		handler: null{},
+		Delim:   string(d.SubSectionDelim),
 	}
 }
 
 func (vs *vStruct) Section(s string) {
 	section := getSection(vs.Struct, s, vs.Delim)
 	if section == nil {
-		vs.Value = null{}
 		return
 	}
-}
-
-func (vs *vStruct) Set(k, v string) error {
-	return vs.Value.Set(k, v)
-}
-
-func (vs *vStruct) Close() {
-	vs.Value.Close()
 }
 
 func getSection(s reflect.Value, section, delim string) []int {
