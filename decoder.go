@@ -66,7 +66,7 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 			if rv.Type().Elem().Elem().Kind() != reflect.String {
 				return ErrInvalidMapType
 			}
-			h = d.NewMapMapString(rv)
+			h = newMapMapString(rv)
 		}
 	case reflect.Ptr:
 		if rv.Elem().Kind() != reflect.Struct {

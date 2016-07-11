@@ -7,7 +7,7 @@ type mapMapString struct {
 	KeyA, KeyB, Value reflect.Value
 }
 
-func (d *decoder) NewMapMapString(m reflect.Value) *mapMapString {
+func newMapMapString(m reflect.Value) *mapMapString {
 	ka := reflect.New(m.Type().Key()).Elem()
 	kb := reflect.New(m.Type().Elem().Key()).Elem()
 	v := reflect.New(m.Type().Elem().Elem()).Elem()
