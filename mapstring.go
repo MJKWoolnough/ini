@@ -10,12 +10,12 @@ type mapString struct {
 	section string
 }
 
-func (d *decoder) NewMapString(m reflect.Value) *mapString {
+func newMapString(m reflect.Value, delim rune) *mapString {
 	return &mapString{
 		Map:   m,
 		Key:   reflect.New(m.Type().Key()).Elem(),
 		Value: reflect.New(m.Type().Elem()).Elem(),
-		Delim: d.SubSectionDelim,
+		Delim: delim,
 	}
 }
 

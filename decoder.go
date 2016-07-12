@@ -56,9 +56,9 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		}
 		switch rv.Type().Elem().Kind() {
 		case reflect.String:
-			h = d.NewMapString(rv)
+			h = newMapString(rv, d.SubSectionDelim)
 		case reflect.Struct:
-			h = d.NewMapStruct(rv)
+			h = newMapStruct(rv, d.IgnoreTypeErrors)
 		case reflect.Map:
 			if rv.Type().Elem().Key().Kind() != reflect.String {
 				return ErrInvalidKey
