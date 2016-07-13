@@ -86,10 +86,8 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		case phraseSection:
 			h.Section(p.Data[0].Data)
 		case phraseNameValue:
-			if err := h.Set(p.Data[0].Data, p.Data[1].Data); err != nil {
-				if !d.IgnoreTypeErrors {
-					return err
-				}
+			if err := h.Set(p.Data[0].Data, p.Data[1].Data); err != nil && !d.IgnoreTypeErrors && err != errUnknownType {
+				return err
 			}
 		case parser.PhraseDone:
 			h.Close()

@@ -7,42 +7,22 @@ import (
 	"strings"
 )
 
-type mapStruct struct {
-	Map              reflect.Value
-	Key              reflect.Value
-	Value            reflect.Value
-	Changes          bool
-	IgnoreTypeErrors bool
+type sStruct struct {
+	Struct reflect.Value
 }
 
-func newMapStruct(m reflect.Value, ignoreTypeErrors bool) *mapStruct {
-	return &mapStruct{
-		Map:              m,
-		Key:              reflect.New(m.Type().Key()).Elem(),
-		Value:            reflect.New(m.Type().Elem()).Elem(),
-		IgnoreTypeErrors: ignoreTypeErrors,
-	}
-}
+func (sStruct) Section(_ string) {}
 
-func (m *mapStruct) Section(s string) {
-	m.Close()
-	m.Key.SetString(s)
-	m.Value = reflect.New(m.Map.Type().Elem()).Elem()
-}
-
-func (m *mapStruct) Set(k, v string) error {
-	nf := matchField(m.Value, k)
+func (s *sStruct) Set(k, v string) error {
+	nf := matchField(s.Struct, k)
 	if nf < 0 {
-		return nil
+		return errUnknownType
 	}
-	f := m.Value.Field(nf)
+	f := s.Struct.Field(nf)
 	switch f.Kind() {
 	case reflect.Slice:
 		e := reflect.New(f.Type().Elem()).Elem()
-		err := setValue(e, v)
-		if err == errUnknownType {
-			return nil
-		} else if err != nil && !m.IgnoreTypeErrors {
+		if err := setValue(e, v); err != nil {
 			return err
 		}
 		reflect.Append(f, e)
@@ -50,32 +30,62 @@ func (m *mapStruct) Set(k, v string) error {
 		mk := reflect.New(f.Type().Key()).Elem()
 		if mk.Kind() == reflect.String {
 			mv := reflect.New(f.Type().Elem()).Elem()
-			err := setValue(mv, v)
-			if err == errUnknownType {
-				return nil
-			} else if err != nil && !m.IgnoreTypeErrors {
+			if err := setValue(mv, v); err != nil {
 				return err
 			}
 			f.SetMapIndex(mk, mv)
 		}
 	default:
 		sv := reflect.New(f.Type()).Elem()
-		err := setValue(sv, v)
-		if err == errUnknownType {
-			return nil
-		} else if err != nil && !m.IgnoreTypeErrors {
+		if err := setValue(sv, v); err != nil {
 			return err
 		}
 		f.Set(sv)
 	}
-	m.Changes = true
+	return nil
+}
 
+func (sStruct) Close() {}
+
+type mapStruct struct {
+	Map reflect.Value
+	sStruct
+	Key              reflect.Value
+	Changes          bool
+	IgnoreTypeErrors bool
+}
+
+func newMapStruct(m reflect.Value, ignoreTypeErrors bool) *mapStruct {
+	return &mapStruct{
+		Map: m,
+		Key: reflect.New(m.Type().Key()).Elem(),
+		sStruct: sStruct{
+			Struct: reflect.New(m.Type().Elem()).Elem(),
+		},
+		IgnoreTypeErrors: ignoreTypeErrors,
+	}
+}
+
+func (m *mapStruct) Section(s string) {
+	m.Close()
+	m.Key.SetString(s)
+	m.Struct = reflect.New(m.Map.Type().Elem()).Elem()
+}
+
+func (m *mapStruct) Set(k, v string) error {
+	if err := m.sStruct.Set(k, v); err != nil {
+		if !m.IgnoreTypeErrors {
+			return err
+		}
+	} else {
+		m.Changes = true
+	}
 	return nil
 }
 
 func (m *mapStruct) Close() {
 	if m.Changes {
-		m.Map.SetMapIndex(m.Key, m.Value)
+		m.Map.SetMapIndex(m.Key, m.Struct)
 		m.Changes = false
 	}
 }
