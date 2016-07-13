@@ -14,22 +14,55 @@ type handler interface {
 type vStruct struct {
 	Struct reflect.Value
 	handler
-	Delim string
+	Delim            rune
+	IgnoreTypeErrors bool
 }
 
-func (d *decoder) NewStruct(s reflect.Value) *vStruct {
+func newStruct(s reflect.Value, delim rune, ignoreTypeErrors bool) *vStruct {
 	return &vStruct{
-		Struct:  s,
-		handler: null{},
-		Delim:   string(d.SubSectionDelim),
+		Struct:           s,
+		handler:          null{},
+		Delim:            d.SubSectionDelim,
+		IgnoreTypeErrors: ignoreTypeErros,
 	}
 }
 
 func (vs *vStruct) Section(s string) {
-	section := getSection(vs.Struct, s, vs.Delim)
+	vs.Value.Close()
+	vs.Value = null{}
+	section := getSection(vs.Struct, s, string(vs.Delim))
 	if section == nil {
 		return
 	}
+	field := vs.Struct.FieldByIndex(section)
+	sect := ""
+	switch field.Kind() {
+	case reflect.Map:
+		if field.Type().Key().Kind() != reflect.String {
+			return
+		}
+		switch sm := field.Type().Elem(); sm.Kind() {
+		case reflect.Map: // map[string]map[string]string
+			if sm.Key().Kind() != reflect.String || sm.Elem().Kind() != reflect.String {
+				return
+			}
+			vs.handler = newMapMapString(field)
+		case reflect.String: // map[string]string
+			vs.handler = newMapString(field, vs.Delim)
+		case reflect.Struct: //map[string]struct
+			vs.handler = newMapStruct(field, vs.IgnoreTypeErrors)
+		}
+	case reflect.Slice:
+		switch field.Type().Elem().Kind() {
+		case reflect.Map: // []map[string]string
+			//vs.handler = newSliceMapString(field, vs.IgnoreTypeErrors)
+		case reflect.Struct: // []struct
+			//vs.handler = newSliceStruct(field, vs.IgnoreTypeErrors)
+		}
+	case reflect.Struct:
+		//vs.handler = newSStruct(field)
+	}
+	vs.handler.Section(sect)
 }
 
 func getSection(s reflect.Value, section, delim string) []int {

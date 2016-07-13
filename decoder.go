@@ -75,7 +75,7 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 		if rv.IsNil() {
 			return ErrNilPointer
 		}
-		h = d.NewStruct(rv.Elem())
+		h = newStruct(rv.Elem(), d.SubSectionDelim, d.IgnoreTypeErrors)
 	default:
 		return ErrInvalidType
 	}
