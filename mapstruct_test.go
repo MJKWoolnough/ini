@@ -1,7 +1,6 @@
 package ini_test
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -32,8 +31,9 @@ func TestMapStruct(t *testing.T) {
 			continue
 		}
 		if !reflect.DeepEqual(test.Result, test.Output) {
-			fmt.Println(test.Result)
 			t.Errorf("Test %d: result does not match expected", n+1)
+			t.Error("got:", test.Output)
+			t.Error("expected:", test.Result)
 		}
 	}
 }
