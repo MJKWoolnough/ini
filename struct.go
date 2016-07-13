@@ -22,14 +22,14 @@ func newStruct(s reflect.Value, delim rune, ignoreTypeErrors bool) *vStruct {
 	return &vStruct{
 		Struct:           s,
 		handler:          null{},
-		Delim:            d.SubSectionDelim,
-		IgnoreTypeErrors: ignoreTypeErros,
+		Delim:            delim,
+		IgnoreTypeErrors: ignoreTypeErrors,
 	}
 }
 
 func (vs *vStruct) Section(s string) {
-	vs.Value.Close()
-	vs.Value = null{}
+	vs.Close()
+	vs.handler = null{}
 	section := getSection(vs.Struct, s, string(vs.Delim))
 	if section == nil {
 		return
