@@ -57,9 +57,12 @@ func (vs *vStruct) Section(s string) {
 	case reflect.Slice:
 		switch field.Type().Elem().Kind() {
 		case reflect.Map: // []map[string]string
-			//vs.handler = newSliceMapString(field, vs.IgnoreTypeErrors)
+			if field.Type().Key().Kind() != reflect.String || field.Type().Elem().Kind() != reflect.String {
+				return
+			}
+			vs.handler = newSliceMapString(field, vs.Delim)
 		case reflect.Struct: // []struct
-			//vs.handler = newSliceStruct(field, vs.IgnoreTypeErrors)
+			vs.handler = newSliceStruct(field)
 		}
 	case reflect.Struct:
 		vs.handler = newSStruct(field)
