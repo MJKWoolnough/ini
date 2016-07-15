@@ -23,7 +23,7 @@ type vStruct struct {
 func newStruct(s reflect.Value, delim rune, ignoreTypeErrors bool) *vStruct {
 	return &vStruct{
 		Struct:           s,
-		handler:          null{},
+		handler:          newSStruct(s),
 		Delim:            delim,
 		IgnoreTypeErrors: ignoreTypeErrors,
 	}
@@ -55,12 +55,13 @@ func (vs *vStruct) Section(s string) {
 			vs.handler = newMapStruct(field, vs.IgnoreTypeErrors)
 		}
 	case reflect.Slice:
-		switch field.Type().Elem().Kind() {
+		sl := field.Type().Elem()
+		switch sl.Kind() {
 		case reflect.Map: // []map[string]string
-			if field.Type().Key().Kind() != reflect.String || field.Type().Elem().Kind() != reflect.String {
+			if sl.Key().Kind() != reflect.String || sl.Elem().Kind() != reflect.String {
 				return
 			}
-			vs.handler = newSliceMapString(field, vs.Delim)
+			vs.handler = newSliceMapString(field.Addr(), vs.Delim)
 		case reflect.Struct: // []struct
 			vs.handler = newSliceStruct(field)
 		}
@@ -162,14 +163,14 @@ func matchField(v reflect.Value, name string) int {
 		}
 		tag := f.Tag.Get("ini")
 		n, o := parseTag(tag)
-		if n == "" {
+		if n == "" && !o.Contains("prefix") {
 			n = f.Name
 		}
 		if n == name {
 			match = i
 			break
 		}
-		if l := len(n); l > score && l >= len(name) && o.Contains("prefix") && name[:l] == n {
+		if l := len(n); l > score && l <= len(name) && o.Contains("prefix") && name[:l] == n {
 			score = l
 			match = i
 		}
