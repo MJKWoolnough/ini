@@ -37,7 +37,6 @@ func (vs *vStruct) Section(s string) {
 		return
 	}
 	field := vs.Struct.FieldByIndex(section)
-	sect := ""
 	switch field.Kind() {
 	case reflect.Map:
 		if field.Type().Key().Kind() != reflect.String {
@@ -68,7 +67,14 @@ func (vs *vStruct) Section(s string) {
 	case reflect.Struct:
 		vs.handler = newSStruct(field)
 	}
-	vs.handler.Section(sect)
+	for len(section) > 1 {
+		i := strings.IndexRune(s, vs.Delim)
+		if i < 0 {
+			break
+		}
+		s = s[i+1:]
+	}
+	vs.handler.Section(s)
 }
 
 func getSection(s reflect.Value, section, delim string) []int {
