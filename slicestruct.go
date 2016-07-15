@@ -23,6 +23,14 @@ func (ss *sliceStruct) Section(s string) {
 	ss.sStruct.Section(s)
 }
 
+func (ss *sliceStruct) Set(k, v string) {
+	err := ss.sStruct.Set(k, v)
+	if err == nil {
+		ss.Changes = true
+	}
+	return err
+}
+
 func (ss *sliceStruct) Close() {
 	if ss.Changes {
 		reflect.Append(ss.Slice, ss.Struct)
