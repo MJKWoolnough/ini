@@ -23,7 +23,7 @@ func (ss *sliceStruct) Section(s string) {
 	ss.sStruct.Section(s)
 }
 
-func (ss *sliceStruct) Set(k, v string) {
+func (ss *sliceStruct) Set(k, v string) error {
 	err := ss.sStruct.Set(k, v)
 	if err == nil {
 		ss.Changes = true
