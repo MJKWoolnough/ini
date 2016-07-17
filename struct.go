@@ -62,7 +62,7 @@ func (vs *vStruct) Section(s string) {
 			}
 			vs.handler = newSliceMapString(field.Addr(), vs.Delim)
 		case reflect.Struct: // []struct
-			vs.handler = newSliceStruct(field)
+			vs.handler = newSliceStruct(field.Addr())
 		}
 	case reflect.Struct:
 		vs.handler = newSStruct(field)
