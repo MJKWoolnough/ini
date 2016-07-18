@@ -47,10 +47,19 @@ func (vs *vStruct) Section(s string) {
 			if sm.Key().Kind() != reflect.String || sm.Elem().Kind() != reflect.String {
 				return
 			}
+			if field.IsNil() {
+				field.Set(reflect.MakeMap(field.Type()))
+			}
 			vs.handler = newMapMapString(field)
 		case reflect.String: // map[string]string
+			if field.IsNil() {
+				field.Set(reflect.MakeMap(field.Type()))
+			}
 			vs.handler = newMapString(field, vs.Delim)
 		case reflect.Struct: //map[string]struct
+			if field.IsNil() {
+				field.Set(reflect.MakeMap(field.Type()))
+			}
 			vs.handler = newMapStruct(field, vs.IgnoreTypeErrors)
 		}
 	case reflect.Slice:
