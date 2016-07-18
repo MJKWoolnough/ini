@@ -84,5 +84,17 @@ func TestStruct(t *testing.T) {
 				},
 			},
 		},
+		{
+			Input: "Val1=1\nVal2=2\nVal3=3",
+			Output: struct {
+				Vals map[string]uint8 `ini:"Val,prefix"`
+			}{
+				Vals: map[string]uint8{
+					"Val1": 1,
+					"Val2": 2,
+					"Val3": 3,
+				},
+			},
+		},
 	})
 }
