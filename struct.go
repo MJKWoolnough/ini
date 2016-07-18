@@ -147,12 +147,16 @@ func (s *sStruct) Set(k, v string) error {
 		}
 		f.Set(reflect.Append(f, e))
 	case reflect.Map:
-		mk := reflect.New(f.Type().Key()).Elem()
-		if mk.Kind() == reflect.String {
+		if f.Type().Key().Kind() == reflect.String {
 			mv := reflect.New(f.Type().Elem()).Elem()
 			if err := setValue(mv, v); err != nil {
 				return err
 			}
+			if f.IsNil() {
+				f.Set(reflect.MakeMap(f.Type()))
+			}
+			mk := reflect.New(f.Type().Key()).Elem()
+			mk.SetString(k)
 			f.SetMapIndex(mk, mv)
 		}
 	default:
