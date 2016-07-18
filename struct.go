@@ -145,7 +145,7 @@ func (s *sStruct) Set(k, v string) error {
 		if err := setValue(e, v); err != nil {
 			return err
 		}
-		reflect.Append(f, e)
+		f.Set(reflect.Append(f, e))
 	case reflect.Map:
 		mk := reflect.New(f.Type().Key()).Elem()
 		if mk.Kind() == reflect.String {
