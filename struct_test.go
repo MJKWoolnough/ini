@@ -17,7 +17,7 @@ func testStruct(t *testing.T, tests []structTest) {
 		result := reflect.New(reflect.TypeOf(test.Output))
 		err := ini.DecodeString(test.Input, result.Interface())
 		if err != nil {
-			t.Errorf("test %d: unexpected error, %s", n+1, err)
+			t.Errorf("%s: test %d: unexpected error, %s", n+1, err)
 		}
 		if !reflect.DeepEqual(result.Elem().Interface(), test.Output) {
 			t.Errorf("test %d: expecting %s, got %s", n+1, test.Output, result.Elem().Interface())
@@ -26,6 +26,9 @@ func testStruct(t *testing.T, tests []structTest) {
 }
 
 func TestStruct(t *testing.T) {
+	type sliceValues struct {
+		Vals []uint8 `ini:"Val,prefix"`
+	}
 	testStruct(t, []structTest{
 		{
 			Input:  "",
@@ -68,6 +71,16 @@ func TestStruct(t *testing.T) {
 					"Other":  map[string]string{"A": "1", "B": "2"},
 					"Misc":   map[string]string{"ZB": "42"},
 					"Other2": map[string]string{"AB": "CD"},
+				},
+			},
+		},
+		{
+			Input: "[SectionA]\nVal1=1\nVal2=2\nVal3=3\n",
+			Output: struct {
+				SectionA sliceValues
+			}{
+				SectionA: sliceValues{
+					Vals: []uint8{1, 2, 3},
 				},
 			},
 		},
