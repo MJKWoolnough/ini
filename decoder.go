@@ -10,14 +10,8 @@ import (
 
 type decoder struct {
 	parser.Parser
-
-	NameValueDelim                                                  rune
-	SubSections                                                     bool
-	SubSectionDelim                                                 rune
-	DuplicateSecond, IgnoreQuotes, IgnoreTypeErrors, AllowMultiline bool
+	options
 }
-
-type Option func(*decoder)
 
 func Decode(r io.Reader, v interface{}, options ...Option) error {
 	return decode(parser.NewReaderTokeniser(r), v, options...)
@@ -39,7 +33,7 @@ func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
 	}
 
 	for _, o := range options {
-		o(&d)
+		o(&d.options)
 	}
 
 	d.TokeniserState(d.name)
