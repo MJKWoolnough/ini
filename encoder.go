@@ -19,11 +19,18 @@ func (m mapKeys) Swap(i, j int) {
 	m[i], m[j] = m[j], m[i]
 }
 
+type encoder struct {
+	io.Writer
+	written bool
+	options
+}
+
 func Encode(w io.Writer, v interface{}, options ...Option) error {
-	var d decoder
+	var e encoder
 	for _, o := range options {
-		o(&d)
+		o(&e.options)
 	}
+	e.Writer = w
 	i := reflect.ValueOf(v)
 	switch i.Kind() {
 	case reflect.Map:
@@ -52,4 +59,41 @@ func Encode(w io.Writer, v interface{}, options ...Option) error {
 		return d.encodeStruct(i)
 	}
 	return ErrInvalidType
+}
+
+func (e *encoder) WriteSection(s string) error {
+	if e.written {
+		if _, err := e.Writer.Write([]byte{'\n', '\n'}); err != nil {
+			return err
+		}
+	}
+	if _, err := e.Writer.Write([]byte{'['}); err != nil {
+		return err
+	}
+	if _, err := e.Writer.Write([]byte(s)); err != nil {
+		return err
+	}
+	if _, err := e.Writer.Write([]byte{']'}); err != nil {
+		return err
+	}
+	e.written = true
+	return nil
+}
+
+func (e *encoder) WriteKeyValue(k, v string) error {
+	if e.written {
+		if _, err := e.Writer.Write([]byte{'\n'}); err != nil {
+			return err
+		}
+	}
+	if _, err := e.Writer.Write([]byte(k)); err != nil {
+		return err
+	}
+	if _, err := e.Writer.Write([]byte{e.NameValueDelim}); err != nil {
+		return err
+	}
+	if _, err := e.Writer.Write([]byte(v)); err != nil {
+		return err
+	}
+	e.written = true
 }
