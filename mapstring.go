@@ -1,6 +1,10 @@
 package ini
 
-import "reflect"
+import (
+	"reflect"
+	"sort"
+	"strings"
+)
 
 type mapString struct {
 	Map     reflect.Value
@@ -31,4 +35,25 @@ func (m *mapString) Set(k, v string) error {
 }
 
 func (m *mapString) Close() {
+}
+
+func (e *encoder) encodeMapString(m reflect.Value) error {
+	keys := mapKeys(m.MapKeys())
+	sort.Sort(keys)
+	var last string
+	for _, key := range keys {
+		k := key.String()
+		v := m.MapIndex(key)
+		var section string
+		p := strings.LastIndexAny(key, string(e.SubSectionDelim))
+		if p >= 0 {
+			section, k = k[:p], k[p+1:]
+		}
+		if section != last {
+			e.WriteSection(section)
+			last = section
+		}
+		e.WriteKeyValue(k, v)
+	}
+	return nil
 }
