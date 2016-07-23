@@ -34,20 +34,19 @@ func Encode(w io.Writer, v interface{}, options ...Option) error {
 	i := reflect.ValueOf(v)
 	switch i.Kind() {
 	case reflect.Map:
-		if i.Type().Key().Kind() != reflect.String {
-
-		}
-		switch i.Type().Elem().Kind() {
-		case reflect.Map:
-			if i.Type().Elem().Key().Kind() == reflect.String && i.Type().Elem().Elem().Kind() == reflect.String {
-				return d.encodeMapMap(i)
+		if i.Type().Key().Kind() == reflect.String && i.IsValid() {
+			switch i.Type().Elem().Kind() {
+			case reflect.Map:
+				if i.Type().Elem().Key().Kind() == reflect.String && i.Type().Elem().Elem().Kind() == reflect.String {
+					return d.encodeMapMap(i)
+				}
+			case reflect.Slice:
+				return d.encodeMapSlice(i)
+			case reflect.String:
+				return d.encodeMapString(i)
+			case reflect.Struct:
+				return d.encodeMapStruct(i)
 			}
-		case reflect.Slice:
-			return d.encodeMapSlice(i)
-		case reflect.String:
-			return d.encodeMapString
-		case reflect.Struct:
-			return d.encodeMapStruct(i)
 		}
 	case reflect.Ptr:
 		if i.Type().Elem().Kind() == reflect.Struct {
