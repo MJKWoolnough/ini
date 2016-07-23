@@ -50,11 +50,12 @@ func Encode(w io.Writer, v interface{}, options ...Option) error {
 			return d.encodeMapStruct(i)
 		}
 	case reflect.Ptr:
-		if i.Type().Elem().Kind() != reflect.Struct {
-
+		if i.Type().Elem().Kind() == reflect.Struct {
+			if i.IsNil() {
+				return ErrNilPointer
+			}
+			return d.encodeStruct(i.Elem())
 		}
-		i = i.Elem()
-		return d.encodeStruct(i)
 	case reflect.Struct:
 		return d.encodeStruct(i)
 	}
