@@ -1,6 +1,9 @@
 package ini
 
-import "reflect"
+import (
+	"reflect"
+	"sort"
+)
 
 type mapStruct struct {
 	Map reflect.Value
@@ -42,5 +45,21 @@ func (m *mapStruct) Close() {
 	if m.Changes {
 		m.Map.SetMapIndex(m.Key, m.Struct)
 		m.Changes = false
+	}
+}
+
+func (e *encoder) encodeMapStruct(m *reflect.Value) error {
+	keys := mapKeys(m.MapKeys())
+	sort.Sort(keys)
+	for _, key := range keys {
+		k := key.String()
+		if k != "" {
+			if err := e.WriteSection(k); err != nil {
+				return err
+			}
+		}
+		if err := e.encodeSStruct(m.MapIndex(key)); err != nil {
+			return err
+		}
 	}
 }
