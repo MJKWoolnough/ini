@@ -45,7 +45,7 @@ func (e *encoder) encodeMapString(m reflect.Value) error {
 		k := key.String()
 		v := m.MapIndex(key)
 		var section string
-		p := strings.LastIndexAny(key, string(e.SubSectionDelim))
+		p := strings.LastIndexAny(k, string(e.SubSectionDelim))
 		if p >= 0 {
 			section, k = k[:p], k[p+1:]
 		}
@@ -53,7 +53,7 @@ func (e *encoder) encodeMapString(m reflect.Value) error {
 			e.WriteSection(section)
 			last = section
 		}
-		e.WriteKeyValue(k, v)
+		e.WriteKeyValue(k, v.String())
 	}
 	return nil
 }

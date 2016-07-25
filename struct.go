@@ -288,6 +288,14 @@ func setValue(v reflect.Value, pv string) error {
 	return nil
 }
 
+func (e *encoder) encodeStruct(v reflect.Value) error {
+	return nil
+}
+
+func (e *encoder) encodeSStruct(v reflect.Value) error {
+	return nil
+}
+
 // Errors
 var (
 	ErrInvalidBool = errors.New("invalid boolean value")

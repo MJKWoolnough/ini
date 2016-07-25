@@ -38,14 +38,12 @@ func Encode(w io.Writer, v interface{}, options ...Option) error {
 			switch i.Type().Elem().Kind() {
 			case reflect.Map:
 				if i.Type().Elem().Key().Kind() == reflect.String && i.Type().Elem().Elem().Kind() == reflect.String {
-					return d.encodeMapMap(i)
+					return e.encodeMapMap(i)
 				}
-			case reflect.Slice:
-				return d.encodeMapSlice(i)
 			case reflect.String:
-				return d.encodeMapString(i)
+				return e.encodeMapString(i)
 			case reflect.Struct:
-				return d.encodeMapStruct(i)
+				return e.encodeMapStruct(i)
 			}
 		}
 	case reflect.Ptr:
@@ -53,10 +51,10 @@ func Encode(w io.Writer, v interface{}, options ...Option) error {
 			if i.IsNil() {
 				return ErrNilPointer
 			}
-			return d.encodeStruct(i.Elem())
+			return e.encodeStruct(i.Elem())
 		}
 	case reflect.Struct:
-		return d.encodeStruct(i)
+		return e.encodeStruct(i)
 	}
 	return ErrInvalidType
 }
@@ -89,11 +87,12 @@ func (e *encoder) WriteKeyValue(k, v string) error {
 	if _, err := e.Writer.Write([]byte(k)); err != nil {
 		return err
 	}
-	if _, err := e.Writer.Write([]byte{e.NameValueDelim}); err != nil {
+	if _, err := e.Writer.Write([]byte{byte(e.NameValueDelim)}); err != nil {
 		return err
 	}
 	if _, err := e.Writer.Write([]byte(v)); err != nil {
 		return err
 	}
 	e.written = true
+	return nil
 }

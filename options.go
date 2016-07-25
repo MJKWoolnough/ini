@@ -7,4 +7,4 @@ type options struct {
 	DuplicateSecond, IgnoreQuotes, IgnoreTypeErrors, AllowMultiline bool
 }
 
-type Option func(*decoder)
+type Option func(*options)

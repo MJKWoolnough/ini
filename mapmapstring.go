@@ -54,10 +54,10 @@ func (e *encoder) encodeMapMap(m reflect.Value) error {
 			}
 		}
 		mv := m.MapIndex(key)
-		mvk := mapKeys(mv.MapKeys)
+		mvk := mapKeys(mv.MapKeys())
 		sort.Sort(mvk)
 		for _, vk := range mvk {
-			if err := e.WriteKeyValue(vk.String(), mvk.MapIndex(vk).String()); err != nil {
+			if err := e.WriteKeyValue(vk.String(), mv.MapIndex(vk).String()); err != nil {
 				return err
 			}
 		}

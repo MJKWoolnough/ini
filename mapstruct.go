@@ -48,7 +48,7 @@ func (m *mapStruct) Close() {
 	}
 }
 
-func (e *encoder) encodeMapStruct(m *reflect.Value) error {
+func (e *encoder) encodeMapStruct(m reflect.Value) error {
 	keys := mapKeys(m.MapKeys())
 	sort.Sort(keys)
 	for _, key := range keys {
@@ -62,4 +62,5 @@ func (e *encoder) encodeMapStruct(m *reflect.Value) error {
 			return err
 		}
 	}
+	return nil
 }

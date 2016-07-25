@@ -25,14 +25,16 @@ func DecoderBytes(b []byte, v interface{}, options ...Option) error {
 	return decode(parser.NewByteTokeniser(b), v, options...)
 }
 
-func decode(t parser.Tokeniser, v interface{}, options ...Option) error {
+func decode(t parser.Tokeniser, v interface{}, os ...Option) error {
 	d := decoder{
-		Parser:          parser.New(t),
-		NameValueDelim:  '=',
-		SubSectionDelim: '/',
+		Parser: parser.New(t),
+		options: options{
+			NameValueDelim:  '=',
+			SubSectionDelim: '/',
+		},
 	}
 
-	for _, o := range options {
+	for _, o := range os {
 		o(&d.options)
 	}
 
