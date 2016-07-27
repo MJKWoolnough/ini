@@ -3,6 +3,7 @@ package ini
 import (
 	"io"
 	"reflect"
+	"unicode/utf8"
 )
 
 type mapKeys []reflect.Value
@@ -25,12 +26,17 @@ type encoder struct {
 	options
 }
 
-func Encode(w io.Writer, v interface{}, options ...Option) error {
-	var e encoder
-	for _, o := range options {
+func Encode(w io.Writer, v interface{}, opts ...Option) error {
+	e := encoder{
+		Writer: w,
+		options: options{
+			NameValueDelim:  '=',
+			SubSectionDelim: '/',
+		},
+	}
+	for _, o := range opts {
 		o(&e.options)
 	}
-	e.Writer = w
 	i := reflect.ValueOf(v)
 	switch i.Kind() {
 	case reflect.Map:
@@ -87,7 +93,7 @@ func (e *encoder) WriteKeyValue(k, v string) error {
 	if _, err := e.Writer.Write([]byte(k)); err != nil {
 		return err
 	}
-	if _, err := e.Writer.Write([]byte{byte(e.NameValueDelim)}); err != nil {
+	if _, err := e.Writer.Write(runeToBytes(e.NameValueDelim)); err != nil {
 		return err
 	}
 	if _, err := e.Writer.Write([]byte(v)); err != nil {
@@ -95,4 +101,10 @@ func (e *encoder) WriteKeyValue(k, v string) error {
 	}
 	e.written = true
 	return nil
+}
+
+func runeToBytes(r rune) []byte {
+	var b [8]byte
+	i := utf8.EncodeRune(b[:], r)
+	return b[:i]
 }
