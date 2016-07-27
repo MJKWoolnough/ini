@@ -6,7 +6,7 @@ import (
 	"github.com/MJKWoolnough/ini"
 )
 
-func TestMapMapString(t *testing.T) {
+func TestDecodeMapMapString(t *testing.T) {
 	tests := []struct {
 		Input  string
 		Output map[string]map[string]string
@@ -136,7 +136,7 @@ func TestMapMapString(t *testing.T) {
 	}
 }
 
-func TestMapMapStringCustomTypes(t *testing.T) {
+func TestDecodeMapMapStringCustomTypes(t *testing.T) {
 	type A string
 	type B string
 	type C string
@@ -178,4 +178,19 @@ func TestMapMapStringCustomTypes(t *testing.T) {
 			t.Errorf("Test: expecting \"SectionB/E\" == \"F\", got %q", b["E"])
 		}
 	}
+}
+
+func TestEncodeMapMapString(t *testing.T) {
+	testEncode(t, []encodeTest{
+		{
+			map[string]map[string]string{
+				"": map[string]string{
+					"A": "1",
+					"C": "2",
+					"B": "3",
+				},
+			},
+			[]byte("A=1\nB=3\nC=2"),
+		},
+	})
 }
