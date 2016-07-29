@@ -202,5 +202,20 @@ func TestEncodeMapMapString(t *testing.T) {
 			},
 			[]byte("[ABC]\nA=1\nB=3\nC=2"),
 		},
+		{
+			map[string]map[string]string{
+				"": map[string]string{
+					"A": "1",
+					"C": "2",
+					"B": "3",
+				},
+				"DEF": map[string]string{
+					"D": "4",
+					"F": "5",
+					"E": "6",
+				},
+			},
+			[]byte("A=1\nB=3\nC=2\n\n[DEF]\nD=4\nE=6\nF=5"),
+		},
 	})
 }
