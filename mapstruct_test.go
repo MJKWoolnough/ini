@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/MJKWoolnough/ini"
+	"vimagination.zapto.org/ini"
 )
 
 func TestMapStruct(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/MJKWoolnough/parser"
+	"vimagination.zapto.org/parser"
 )
 
 const (

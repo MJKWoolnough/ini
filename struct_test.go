@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/MJKWoolnough/ini"
+	"vimagination.zapto.org/ini"
 )
 
 type structTest struct {

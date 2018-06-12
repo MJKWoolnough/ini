@@ -1,11 +1,11 @@
-package ini
+package ini // import "vimagination.zapto.org/ini"
 
 import (
 	"errors"
 	"io"
 	"reflect"
 
-	"github.com/MJKWoolnough/parser"
+	"vimagination.zapto.org/parser"
 )
 
 type decoder struct {

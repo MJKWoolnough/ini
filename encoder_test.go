@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/MJKWoolnough/ini"
+	"vimagination.zapto.org/ini"
 )
 
 type encodeTest struct {

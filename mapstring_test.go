@@ -3,7 +3,7 @@ package ini_test
 import (
 	"testing"
 
-	"github.com/MJKWoolnough/ini"
+	"vimagination.zapto.org/ini"
 )
 
 func TestMapString(t *testing.T) {
